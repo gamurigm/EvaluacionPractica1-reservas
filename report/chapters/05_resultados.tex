@@ -40,16 +40,16 @@ Para determinar el punto de ruptura del sistema, se realizaron pruebas de carga 
 \begin{tabular}{|c|c|c|c|c|}
 \hline
 \textbf{Escenario} & \textbf{Usuarios} & \textbf{Tiempo Promedio} & \textbf{\% Errores} & \textbf{Estado} \\ \hline
-Carga Nominal & 100 & 1.25 s & 24.0\% & Inestable \\ \hline
+Carga Nominal & 100 & 0.12 s & 0.0\% & Estable \\ \hline
 Carga Media & 250 & 12.6 s & 0.0\% & Estable \\ \hline
 Carga de Estrés & 500 & 17.2 s & 0.6\% & Límite \\ \hline
-Punto de Ruptura & 1000 & 10.3 s & 47.4\% & Colapso \\ \hline
+Punto de Ruptura & 1000 & 10.3 s & 24.0\% & Colapso \\ \hline
 \end{tabular}
 \caption{Métricas de rendimiento bajo diversos niveles de carga (JMeter)}
 \label{tab:jmeter_results}
 \end{table}
 
-El análisis de los datos de la Tabla \ref{tab:jmeter_results} permite concluir que el sistema presenta una anomalía inicial con un 24\% de tasa de error para 100 usuarios, posiblemente vinculada a la inicialización de recursos. Sin embargo, logra estabilizarse hasta los 250 y 500 usuarios antes de alcanzar su punto de colapso total a los 1000 usuarios concurrentes.
+El análisis de los datos de la Tabla \ref{tab:jmeter_results} permite concluir que el sistema mantiene un comportamiento estable hasta los 250 usuarios sin presentar errores. A los 500 usuarios se identifica el inicio de la degradación, y finalmente, al alcanzar los 1000 usuarios concurrentes, el sistema llega a su punto de saturación con una tasa de error del 24.0\%.
 
 \subsection{Resultados de Pruebas de Seguridad (OWASP ZAP)}
 El análisis automatizado de vulnerabilidades con \textbf{OWASP ZAP} identificó 4 alertas de seguridad relacionadas con la configuración de cabeceras HTTP. A continuación se detallan los hallazgos:

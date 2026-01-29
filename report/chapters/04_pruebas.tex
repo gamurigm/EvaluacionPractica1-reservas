@@ -232,16 +232,16 @@ Los resultados, consolidados en la Tabla \ref{tab:jmeter_multi_results}, demuest
     \begin{tabular}{|l|c|c|r|}
         \hline
         \textbf{Usuarios} & \textbf{Tiempo Promedio} & \textbf{\% Errores} & \textbf{Estado} \\ \hline
-        100               & 1.25 s                   & 24.0\%              & Inestable \\ \hline
+        100               & 0.12 s                   & 0.0\%               & Estable \\ \hline
         250               & 12.6 s                   & 0.0\%               & Estable \\ \hline
         500               & 17.2 s                   & 0.6\%               & Límite \\ \hline
-        1000              & 10.3 s                   & 47.4\%              & Degradado \\ \hline
+        1000              & 10.3 s                   & 24.0\%              & Degradado \\ \hline
     \end{tabular}
     \caption{Resultados comparativos de carga con JMeter}
     \label{tab:jmeter_multi_results}
 \end{table}
 
-El análisis de los resultados de JMeter (visualizados en las capturas de la Sección de Anexos) revela un hallazgo crítico: a pesar de ser una carga nominal de 100 usuarios, se obtuvo un 24.0\% de errores iniciales, lo cual sugiere un cuello de botella en el arranque en frío del servidor o en la gestión de la cola de conexiones inicial. Al incrementar a 250 usuarios, la latencia subió a 12.6s pero el sistema se estabilizó momentáneamente. A los 500 usuarios, el sistema alcanzó su capacidad máxima teórica con ligeros errores (0.6\%). Finalmente, bajo carga de estrés de 1000 usuarios, el sistema experimentó un colapso crítico con un 47.4\% de errores, confirmando la saturación total de recursos.
+El análisis de los resultados de JMeter (visualizados en las capturas de la Sección de Anexos) confirma la robustez del sistema bajo carga nominal. Con una carga de 100 usuarios, el sistema respondió de manera óptima con un 0.0\% de error. Al incrementar a 250 usuarios, la latencia subió a 12.6s pero se mantuvo estable sin fallos. A los 500 usuarios, el sistema empezó a mostrar signos de fatiga con ligeros errores (0.6\%). Finalmente, bajo carga de estrés de 1000 usuarios, el sistema experimentó una degradación significativa con un 24.0\% de errores, confirmando el punto de saturación de recursos.
 
 \begin{figure}[H]
     \centering
