@@ -15,9 +15,11 @@ Durante la ejecución de las pruebas se identificaron varios cuellos de botella 
 
 \subsection{Mejora Continua del Sistema}
 \begin{enumerate}
-    \item \textbf{Automatización del Pipeline:} Integrar de forma obligatoria el paso de \textit{Quality Gate} de SonarQube en el CI/CD, bloqueando cualquier despliegue que no cumpla con el 80\% de cobertura.
+    \item \textbf{Integración Continua:} Implementar de forma definitiva el pipeline de \textbf{GitHub Actions} para ejecutar la suite de pruebas automatizadas y el análisis de calidad en cada commit, asegurando que no existan regresiones en producción.
     
-    \item \textbf{Seguridad desde el Diseño:} Mantener el middleware de cabeceras de seguridad implementado en \texttt{app.js} y auditar periódicamente la política de seguridad de contenido (CSP) ante la adición de librerías externas.
+    \item \textbf{Auditorías de Seguridad:} Realizar auditorías de seguridad trimestrales utilizando \textbf{OWASP ZAP} para detectar nuevas vulnerabilidades surgidas por actualizaciones de dependencias o cambios en la lógica de negocio.
     
-    \item \textbf{Pruebas de Estrés en Staging:} No realizar pruebas de estrés críticas (1000+ usuarios) en entornos de desarrollo locales; se recomienda el uso de entornos de \textit{Staging} con especificaciones similares a las de producción.
+    \item \textbf{Métricas de Calidad:} Mantener el umbral de \textbf{cobertura mínima del 80\%} y la densidad de defectos por debajo de 1.0/KLOC como requisitos de aceptación para cualquier nueva funcionalidad.
+    
+    \item \textbf{Pruebas de Estrés:} Utilizar entornos de Staging con especificaciones similares a producción para validaciones de carga superiores a 500 usuarios, evitando así interferencias por limitaciones de hardware local.
 \end{enumerate}

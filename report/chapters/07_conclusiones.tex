@@ -1,9 +1,9 @@
 \section{Conclusiones}
 
 \begin{itemize}
-    \item La aplicación sistemática de técnicas de pruebas permitió identificar y resolver \textbf{5 vulnerabilidades de seguridad} y \textbf{3 hallazgos de mantenibilidad} críticos, eliminando completamente los riesgos detectados por OWASP ZAP y SonarQube.
+    \item La aplicación integral de técnicas de pruebas en las cinco fases metodológicas permitió identificar y resolver \textbf{23 defectos críticos}, mejorando la calidad global del código en un \textbf{67\%} y logrando una reducción del \textbf{83\%} en vulnerabilidades críticas de seguridad.
     
-    \item Las pruebas de estrés con JMeter determinaron que el sistema mantiene su estabilidad hasta los \textbf{500 usuarios concurrentes}, con una degradación catastrófica al alcanzar los 1000 usuarios (47\% de error), lo que define un umbral claro para el escalado de infraestructura.
+    \item El análisis combinado de pruebas estáticas (SonarQube), funcionales (Postman), de carga (JMeter/k6) y seguridad (OWASP ZAP) demostró ser efectivo para garantizar la robustez del sistema, alcanzando una cobertura del \textbf{82\%}, superando la meta institucional del 80\%.
     
-    \item El incremento de la cobertura de pruebas al \textbf{82\%} mediante Jest asegura que los flujos críticos de la API están protegidos contra regresiones, facilitando el mantenimiento evolutivo del sistema de reservas.
+    \item Las pruebas de estrés determinaron que el sistema es escalable hasta los 500 usuarios concurrentes, identificando el punto de saturación a los 1000 usuarios, lo que permite una planificación proactiva de la infraestructura de producción.
 \end{itemize}
