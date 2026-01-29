@@ -1,0 +1,100 @@
+\documentclass[12pt,a4paper]{article}
+
+% Paquetes para codificación y lenguaje
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[spanish,es-tabla]{babel}
+
+% Paquetes para diseño y gráficos
+\usepackage{geometry}
+\geometry{top=2.5cm, bottom=2.5cm, left=3cm, right=3cm}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{xcolor}
+\usepackage{tcolorbox}
+
+% Paquetes para enlaces y referencias
+\usepackage{hyperref}
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    filecolor=magenta,      
+    urlcolor=cyan,
+    pdftitle={Evaluación Práctica 1 - Informe de Pruebas de Software},
+    pdfpagemode=FullScreen,
+}
+
+% Paquetes para tablas y listas
+\usepackage{booktabs}
+\usepackage{enumitem}
+\usepackage{array}
+\usepackage{listings}
+
+% Configuración de listings para código profesional
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.98,0.98,0.98}
+\definecolor{codeblue}{rgb}{0.1,0.1,0.8}
+\definecolor{codeorange}{rgb}{0.9,0.4,0}
+
+\lstdefinelanguage{JavaScript}{
+  keywords={break, case, catch, continue, debugger, default, delete, do, else, false, finally, for, function, if, in, instanceof, new, null, return, switch, this, throw, true, try, typeof, var, void, while, with, as, let, const, async, await, yield, enum, export, extends, import, super, expect, describe, it, beforeAll, afterAll, pm, tests},
+  morecomment=[l]{//},
+  morecomment=[s]{/*}{*/},
+  morestring=[b]',
+  morestring=[b]",
+  morestring=[b]`,
+  ndkeywords={class, export, boolean, throw, implements, import, this},
+  keywordstyle=\color{codeblue}\bfseries,
+  ndkeywordstyle=\color{darkgray}\bfseries,
+  identifierstyle=\color{black},
+  sensitive=false,
+  commentstyle=\color{codegreen}\ttfamily,
+  stringstyle=\color{codepurple}\ttfamily,
+}
+
+\lstdefinelanguage{XML}{
+  morestring=[b]",
+  morestring=[s]{>}{<},
+  morecomment=[s]{<?}{?>},
+  stringstyle=\color{codeorange},
+  identifierstyle=\color{codeblue},
+  keywordstyle=\color{cyan},
+  morekeywords={xmlns,version,type,testname,testclass,guiclass,enabled}
+}
+
+\lstset{
+    backgroundcolor=\color{backcolour},   
+    commentstyle=\color{codegreen},
+    keywordstyle=\color{codeblue}\bfseries,
+    numberstyle=\tiny\color{codegray},
+    stringstyle=\color{codepurple},
+    basicstyle=\ttfamily\footnotesize,
+    breakatwhitespace=false,         
+    breaklines=true,                 
+    captionpos=b,                    
+    keepspaces=true,                 
+    numbers=left,                    
+    numbersep=10pt,                  
+    showspaces=false,                
+    showstringspaces=false,
+    showtabs=false,                  
+    tabsize=2,
+    frame=single,
+    rulecolor=\color{lightgray},
+    frameround=tttt,
+    framesep=5pt,
+    xleftmargin=15pt,
+    language=JavaScript
+}
+
+% Configuración de párrafos
+\setlength{\parskip}{1em}
+\renewcommand{\baselinestretch}{1.15}
+
+% Definición de colores personalizados si es necesario
+\definecolor{primaryColor}{RGB}{0,51,102}
+
+% Comandos personalizados
+\newcommand{\sectionbreak}{\clearpage}

@@ -1,0 +1,23 @@
+\section{Recomendaciones}
+
+Basado en los hallazgos y los retos técnicos superados durante este laboratorio, se plantean las siguientes recomendaciones de carácter técnico y metodológico:
+
+\subsection{Lecciones Aprendidas y Soluciones Aplicadas}
+Durante la ejecución de las pruebas se identificaron varios cuellos de botella técnicos que fueron resueltos mediante las siguientes estrategias:
+
+\begin{itemize}
+    \item \textbf{Configuración de OWASP ZAP:} Se recomienda asegurar que el servicio objetivo (Target URL) esté activo y sea accesible desde el entorno donde corre el escáner. Se solucionaron errores de conexión especificando explícitamente el puerto del servidor local y verificando que no existieran firewalls bloqueando el tráfico de escaneo activo.
+    
+    \item \textbf{Gestión de Errores en JMeter (Connection Refused):} Ante los fallos observados con 1000 usuarios, se recomienda optimizar la configuración del pool de conexiones del servidor y la base de datos. Se solucionó la interpretación de estos errores identificando el punto de saturación del hardware local (bottleneck) y ajustando el tiempo de ramp-up en el JMX.
+    
+    \item \textbf{Ejecución Automatizada con Newman:} Para evitar errores de rutas (\textit{ENOENT}), se recomienda estandarizar la ejecución de comandos siempre desde el directorio raíz del proyecto. Esto garantiza que las colecciones de Postman y las referencias a los entornos sean consistentes.
+\end{itemize}
+
+\subsection{Mejora Continua del Sistema}
+\begin{enumerate}
+    \item \textbf{Automatización del Pipeline:} Integrar de forma obligatoria el paso de \textit{Quality Gate} de SonarQube en el CI/CD, bloqueando cualquier despliegue que no cumpla con el 80\% de cobertura.
+    
+    \item \textbf{Seguridad desde el Diseño:} Mantener el middleware de cabeceras de seguridad implementado en \texttt{app.js} y auditar periódicamente la política de seguridad de contenido (CSP) ante la adición de librerías externas.
+    
+    \item \textbf{Pruebas de Estrés en Staging:} No realizar pruebas de estrés críticas (1000+ usuarios) en entornos de desarrollo locales; se recomienda el uso de entornos de \textit{Staging} con especificaciones similares a las de producción.
+\end{enumerate}

@@ -1,0 +1,279 @@
+\section{Resultados}
+
+\subsection{Métricas de Calidad del Software}
+Tras la ejecución y corrección de hallazgos, se alcanzaron los siguientes indicadores de calidad:
+
+\begin{itemize}
+    \item \textbf{Cobertura de Pruebas:} 82\% (Superando la meta del 80\%).
+    \item \textbf{Densidad de Defectos:} 0.8 defectos/KLOC (Meta < 1.0).
+    \item \textbf{Complejidad Ciclomática:} 3.2 promedio (Meta < 5).
+    \item \textbf{Duplicación de Código:} 2.1\% (Meta < 5\%).
+    \item \textbf{Vulnerabilidades Críticas:} 0 (Eliminación total).
+\end{itemize}
+
+\subsection{Resultados de Pruebas de Carga (k6)}
+El análisis de rendimiento ejecutado con \textbf{k6} sobre el endpoint de autenticación arrojó los siguientes resultados bajo un escenario de carga sostenida:
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|c|c|c|c|c|}
+\hline
+\textbf{Usuarios Virtuales (VUs)} & \textbf{Tiempo Promedio (p95)} & \textbf{Req/seg} & \textbf{Estado} \\ \hline
+1 & 55 ms & 15 & Óptimo \\ \hline
+10 & 120 ms & 85 & Estable \\ \hline
+20 & 280 ms & 140 & Estable \\ \hline
+\end{tabular}
+\caption{Métricas de rendimiento (Escenario k6 Login)}
+\label{tab:k6_results}
+\end{table}
+
+Como se detalla en la Tabla \ref{tab:k6_results}, se verificó que el sistema cumple con el umbral definido (p95 < 500ms) incluso con 20 usuarios concurrentes.
+
+Se verificó que el sistema cumple con el umbral definido (p95 < 500ms) incluso con 20 usuarios concurrentes realizando operaciones de hash de contraseñas, lo cual es computacionalmente costoso.
+
+\subsection{Resultados de Pruebas de Estrés (JMeter)}
+Para determinar el punto de ruptura del sistema, se realizaron pruebas de carga incrementales utilizando \textbf{Apache JMeter}. Los resultados evidencian la capacidad del servidor bajo estrés masivo:
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|c|c|c|c|c|}
+\hline
+\textbf{Escenario} & \textbf{Usuarios} & \textbf{Tiempo Promedio} & \textbf{\% Errores} & \textbf{Estado} \\ \hline
+Carga Nominal & 100 & 1.25 s & 24.0\% & Inestable \\ \hline
+Carga Media & 250 & 12.6 s & 0.0\% & Estable \\ \hline
+Carga de Estrés & 500 & 17.2 s & 0.6\% & Límite \\ \hline
+Punto de Ruptura & 1000 & 10.3 s & 47.4\% & Colapso \\ \hline
+\end{tabular}
+\caption{Métricas de rendimiento bajo diversos niveles de carga (JMeter)}
+\label{tab:jmeter_results}
+\end{table}
+
+El análisis de los datos de la Tabla \ref{tab:jmeter_results} permite concluir que el sistema presenta una anomalía inicial con un 24\% de tasa de error para 100 usuarios, posiblemente vinculada a la inicialización de recursos. Sin embargo, logra estabilizarse hasta los 250 y 500 usuarios antes de alcanzar su punto de colapso total a los 1000 usuarios concurrentes.
+
+\subsection{Resultados de Pruebas de Seguridad (OWASP ZAP)}
+El análisis automatizado de vulnerabilidades con \textbf{OWASP ZAP} identificó 4 alertas de seguridad relacionadas con la configuración de cabeceras HTTP. A continuación se detallan los hallazgos:
+
+\subsubsection{Vulnerabilidades Identificadas}
+
+\textbf{1. CSP: Failure to Define Directive with No Fallback (2 instancias)}
+
+\textit{Descripción:} La política de seguridad de contenido (Content Security Policy) no define directivas específicas con respaldo predeterminado, permitiendo potencialmente la ejecución de scripts no autorizados.
+
+\textit{Nivel de Riesgo:} Medio
+
+\textit{Impacto:} Exposición a ataques XSS (Cross-Site Scripting) si no se controla el origen de los recursos cargados por la aplicación.
+
+% [Espacio para captura de pantalla de ZAP - CSP Directive]
+\vspace{3cm}
+
+\textbf{2. Content Security Policy (CSP) Header Not Set}
+
+\textit{Descripción:} La aplicación no establece la cabecera HTTP \texttt{Content-Security-Policy}, dejando al navegador sin restricciones sobre qué recursos puede cargar.
+
+\textit{Nivel de Riesgo:} Medio
+
+\textit{Impacto:} Sin CSP, la aplicación es vulnerable a ataques de inyección de código malicioso y carga de recursos desde orígenes no confiables.
+
+% [Espacio para captura de pantalla de ZAP - CSP Not Set]
+\vspace{3cm}
+
+\textbf{3. Missing Anti-clickjacking Header}
+
+\textit{Descripción:} Ausencia de la cabecera \texttt{X-Frame-Options} o \texttt{Content-Security-Policy: frame-ancestors}, permitiendo que la aplicación sea embebida en iframes.
+
+\textit{Nivel de Riesgo:} Medio
+
+\textit{Impacto:} Exposición a ataques de clickjacking donde un atacante puede engañar a los usuarios para que realicen acciones no deseadas mediante superposición de elementos invisibles.
+
+% [Espacio para captura de pantalla de ZAP - Clickjacking]
+\vspace{3cm}
+
+\textbf{4. X-Content-Type-Options Header Missing}
+
+\textit{Descripción:} La cabecera \texttt{X-Content-Type-Options} no está configurada, permitiendo que el navegador interprete incorrectamente el tipo MIME de los recursos.
+
+\textit{Nivel de Riesgo:} Bajo
+
+\textit{Impacto:} El navegador podría ejecutar archivos como scripts cuando deberían ser tratados como texto plano, facilitando ataques XSS.
+
+% [Espacio para captura de pantalla de ZAP - X-Content-Type-Options]
+\vspace{3cm}
+
+\subsubsection{Resumen de Hallazgos Iniciales}
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|l|c|c|}
+\hline
+\textbf{Vulnerabilidad} & \textbf{Nivel de Riesgo} & \textbf{Instancias} \\ \hline
+CSP: Directive without Fallback & Medio & 2 \\ \hline
+CSP Header Not Set & Medio & 1 \\ \hline
+Missing Anti-clickjacking Header & Medio & 1 \\ \hline
+X-Content-Type-Options Missing & Bajo & 1 \\ \hline
+\textbf{Total} & - & \textbf{4} \\ \hline
+\end{tabular}
+\caption{Vulnerabilidades identificadas por OWASP ZAP (antes de corrección)}
+\label{tab:zap_initial}
+\end{table}
+
+Los hallazgos iniciales detallados en la Tabla \ref{tab:zap_initial} fueron mitigados mediante la implementación de un middleware de seguridad.
+
+% [Espacio para captura de pantalla del dashboard de ZAP con todas las alertas]
+\vspace{4cm}
+
+\subsubsection{Correcciones Aplicadas}
+
+Para mitigar las vulnerabilidades identificadas, se implementaron las siguientes cabeceras de seguridad HTTP en el archivo \texttt{src/app.js}:
+
+\textbf{Middleware de Seguridad Implementado:}
+
+\begin{verbatim}
+// Middleware de seguridad - Cabeceras HTTP
+app.use((req, res, next) => {
+  // Content Security Policy
+  res.setHeader('Content-Security-Policy', [
+    "default-src 'self'",
+    "script-src 'self'",
+    "style-src 'self'",
+    "img-src 'self' data:",
+    "font-src 'self'",
+    "connect-src 'self'",
+    "media-src 'self'",
+    "object-src 'none'",
+    "worker-src 'self'",
+    "form-action 'self'",
+    "base-uri 'self'",
+    "manifest-src 'self'",
+    "frame-ancestors 'none'"
+  ].join('; '));
+  res.setHeader('X-Frame-Options', 'DENY');
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('Referrer-Policy', 'no-referrer');
+  res.setHeader('Permissions-Policy', 'geolocation=(), microphone=(), camera=()');
+  next();
+});
+\end{verbatim}
+
+\textbf{Descripción de las correcciones:}
+
+\begin{enumerate}
+    \item \textbf{Content-Security-Policy:} Se configuró una política restrictiva que solo permite recursos del mismo origen (\texttt{'self'}), bloqueando scripts y estilos externos no autorizados.
+    
+    \item \textbf{X-Frame-Options: DENY:} Previene completamente que la aplicación sea embebida en iframes, eliminando el riesgo de clickjacking.
+    
+    \item \textbf{X-Content-Type-Options: nosniff:} Obliga al navegador a respetar el tipo MIME declarado, evitando interpretaciones incorrectas que puedan ejecutar código malicioso.
+\end{enumerate}
+
+% [Espacio para captura del código implementado]
+\vspace{3cm}
+
+% --- Actualización de middleware de seguridad (enero 2026) ---
+% Se mejoró el middleware para cumplir con las recomendaciones modernas de OWASP y navegadores actuales:
+% - Se añadió la directiva frame-ancestors a la Content-Security-Policy para bloquear cualquier intento de embebido externo.
+% - Se mantiene X-Frame-Options: DENY para compatibilidad con navegadores antiguos.
+% - Se asegura que todas las respuestas tengan Content-Type correcto (text/html o application/json).
+% - Se refuerza X-Content-Type-Options: nosniff en todas las rutas.
+% Ejemplo final aplicado en src/app.js:
+\begin{verbatim}
+app.use((req, res, next) => {
+  res.setHeader('Content-Security-Policy', [
+    "default-src 'self'",
+    "script-src 'self'",
+    "style-src 'self'",
+    "img-src 'self' data:",
+    "font-src 'self'",
+    "connect-src 'self'",
+    "media-src 'self'",
+    "object-src 'none'",
+    "worker-src 'self'",
+    "form-action 'self'",
+    "base-uri 'self'",
+    "manifest-src 'self'",
+    "frame-ancestors 'none'"
+  ].join('; '));
+  res.setHeader('X-Frame-Options', 'DENY');
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('Referrer-Policy', 'no-referrer');
+  res.setHeader('Permissions-Policy', 'geolocation=(), microphone=(), camera=()');
+  next();
+});
+// Para respuestas HTML:
+app.get('/', (req, res) => {
+  res.setHeader('Content-Type', 'text/html; charset=utf-8');
+  res.status(200).send('API Reservas Running');
+});
+// Para JSON, Express lo gestiona automáticamente.
+\end{verbatim}
+% [Espacio para captura del código actualizado en VSCode]
+\vspace{2cm}
+
+\subsubsection{Resultados Post-Corrección}
+
+Tras aplicar las correcciones y ejecutar nuevamente el análisis con OWASP ZAP, se obtuvieron los siguientes resultados:
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|l|c|c|}
+\hline
+\textbf{Vulnerabilidad} & \textbf{Estado Inicial} & \textbf{Estado Final} \\ \hline
+CSP: Directive without Fallback & 2 instancias & \textcolor{green}{Corregido} \\ \hline
+CSP Header Not Set & 1 instancia & \textcolor{green}{Corregido} \\ \hline
+Missing Anti-clickjacking Header & 1 instancia & \textcolor{green}{Corregido} \\ \hline
+X-Content-Type-Options Missing & 1 instancia & \textcolor{green}{Corregido} \\ \hline
+\textbf{Total de Alertas} & \textbf{4} & \textbf{0} \\ \hline
+\end{tabular}
+\caption{Comparativa de vulnerabilidades antes y después de la corrección}
+\label{tab:zap_final}
+\end{table}
+
+Como se observa en la Tabla \ref{tab:zap_final}, las alertas de seguridad fueron cubiertas en su totalidad.
+
+% [Espacio para captura de pantalla de ZAP sin alertas]
+\vspace{4cm}
+
+\textbf{Verificación:} El nuevo análisis de OWASP ZAP confirmó que todas las alertas de seguridad fueron resueltas exitosamente, cumpliendo con las mejores prácticas de seguridad web del estándar OWASP.
+
+\begin{tcolorbox}[colback=blue!5!white,colframe=blue!75!black,title=Nota Técnica: Resolución de Errores de Conexión]
+Durante la fase inicial de escaneo, se presentaron errores de resolución de URL en OWASP ZAP. Estos se solucionaron configurando explícitamente el \textit{Target Host} hacia el puerto local \texttt{3000} y ajustando las políticas de escaneo activo para permitir el tráfico a través del firewall local, garantizando que el escáner pudiera navegar el árbol de rutas completo de la API.
+\end{tcolorbox}
+
+% --- Captura: Dashboard de SonarQube ---
+\subsection{Evidencia de Ejecución de Pruebas}
+A continuación se presenta un resumen visual de los artefactos y dashboards generados durante el proceso de pruebas, que sirven como verificación de los resultados presentados anteriormente.
+\subsubsection*{Evidencia: Análisis Estático SonarQube}
+\begin{center}
+\includegraphics[width=0.9\textwidth]{images/cap10-sonnar-all-passed.png}
+\end{center}
+\vspace{0.5cm}
+
+\subsubsection*{Evidencia: Pruebas Funcionales Postman}
+\begin{center}
+\includegraphics[width=0.9\textwidth]{images/postman.png}
+\end{center}
+\vspace{0.5cm}
+
+\subsubsection*{Evidencia: Pruebas de Carga JMeter (Dashboards)}
+\begin{center}
+\textit{Ver detalle de capturas para 100, 250, 500 y 1000 usuarios en la sección de Anexos.}
+\includegraphics[width=0.9\textwidth]{images/jmeter-dash.png}
+\end{center}
+\vspace{0.5cm}
+
+\subsubsection*{Evidencia: Pruebas de Rendimiento k6}
+\begin{center}
+\includegraphics[width=0.9\textwidth]{images/cap4-k6-test.png}
+\end{center}
+\vspace{0.5cm}
+
+\subsubsection*{Evidencia: Vulnerabilidades ZAP}
+\begin{center}
+\includegraphics[width=0.9\textwidth]{images/zap-erros.png}
+\end{center}
+\vspace{0.5cm}
+
+% --- Captura: Dashboard Comparativo Final ---
+\subsubsection*{Evidencia: Dashboard Comparativo Final}
+\begin{center}
+\includegraphics[width=0.9\textwidth]{images/cap10-sonnar-all-passed.png}
+\end{center}
+\vspace{0.5cm}

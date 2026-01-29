@@ -1,0 +1,49 @@
+# Dependencias
+node_modules/
+
+# Entorno y Secretos
+.env
+.env.local
+.env.*.local
+
+# Logs y Temporales
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+logs/
+*.log
+tests/*.jtl
+tests/*.log
+
+# SonarQube
+.scannerwork/
+
+# LaTeX - Ignorar archivos auxiliares pero MANTENER el PDF útil
+report/*.aux
+report/*.fdb_latexmk
+report/*.fls
+report/*.gz
+report/*.log
+report/*.toc
+report/*.lof
+report/*.lot
+report/*.out
+report/*.nav
+report/*.snm
+report/*.vrb
+
+# Excluir archivos irrelevantes o de planificación
+pptx_content.txt
+*.pptx
+*.docx
+*.txt
+
+# Asegurar que se suban los tests y los reportes de JMeter (solicitado por usuario)
+!tests/
+!tests/jmeter_report_*/
+!report/main.pdf
+
+# OS
+.DS_Store
+Thumbs.db

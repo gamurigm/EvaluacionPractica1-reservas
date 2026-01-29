@@ -1,0 +1,269 @@
+\section{Anexos}
+
+\subsection{Evidencia Visual de Pruebas}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{images/cap10-sonnar-all-passed.png}
+    \caption{Dashboard General de SonarQube mostrando 0 hallazgos tras corrección}
+    \label{fig:sonar_dash}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{images/postman0.png}
+    \caption{Configuración inicial de la Colección de Pruebas en Postman}
+    \label{fig:postman_gui}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{images/postman.png}
+    \caption{Resultados de ejecución exitosa de Pruebas de Integración (Postman/Newman)}
+    \label{fig:postman_res}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{images/jmeter-100.png}
+    \caption{Resultados de Carga Nominal (100 usuarios) - 24.0\% de error}
+    \label{fig:jmeter_100}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{images/jmeter-250.png}
+    \caption{Resultados de Carga Media (250 usuarios)}
+    \label{fig:jmeter_250}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{images/jmeter-500.png}
+    \caption{Resultados de Carga de Estrés (500 usuarios)}
+    \label{fig:jmeter_500}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{images/jmeter-1000.png}
+    \caption{Resultados de Punto de Ruptura (1000 usuarios)}
+    \label{fig:jmeter_1000}
+\end{figure}
+
+\subsection{Código de Pruebas Implementado}
+
+A continuación se presenta el código fuente íntegro de los scripts de pruebas desarrollados para la validación del sistema en sus diferentes capas.
+
+\subsubsection{Pruebas Funcionales y de Integración (tests/functional.test.js)}
+\begin{lstlisting}[language=JavaScript, caption=Suite íntegra de pruebas funcionales y de seguridad con Jest]
+const request = require('supertest');
+const mongoose = require('mongoose');
+const app = require('../src/app');
+const User = require('../src/models/User');
+const Reserva = require('../src/models/Reserva');
+
+jest.setTimeout(30000);
+let token;
+
+afterAll(async () => {
+    await mongoose.connection.close();
+});
+
+describe('Functional Tests - API Reservas', () => {
+    beforeAll(async () => {
+        await User.deleteMany({ email: 'test@example.com' });
+        await Reserva.deleteMany({ nombreCliente: 'Test Client' });
+    });
+
+    describe('Authentication', () => {
+        it('should register a new user', async () => {
+            const res = await request(app)
+                .post('/api/auth/register')
+                .send({
+                    username: 'testuser',
+                    email: 'test@example.com',
+                    password: 'password123'
+                });
+            expect(res.statusCode).toEqual(201);
+            expect(res.body).toHaveProperty('msg');
+        });
+
+        it('should login with valid credentials', async () => {
+            const res = await request(app)
+                .post('/api/auth/login')
+                .send({
+                    email: 'test@example.com',
+                    password: 'password123'
+                });
+            expect(res.statusCode).toEqual(200);
+            expect(res.body).toHaveProperty('token');
+            token = res.body.token;
+        });
+
+        it('should not login with invalid password', async () => {
+            const res = await request(app)
+                .post('/api/auth/login')
+                .send({
+                    email: 'test@example.com',
+                    password: 'wrongpassword'
+                });
+            expect(res.statusCode).toEqual(400);
+        });
+    });
+
+    describe('Reservations', () => {
+        it('should not create reservation without token', async () => {
+            const res = await request(app)
+                .post('/api/reservas')
+                .send({
+                    fecha: '2025-12-01',
+                    hora: '10:00',
+                    nombreCliente: 'Test Client'
+                });
+            expect(res.statusCode).toEqual(401);
+        });
+
+        it('should create reservation with valid token', async () => {
+            const res = await request(app)
+                .post('/api/reservas')
+                .set('Authorization', `Bearer ${token}`)
+                .send({
+                    fecha: '2025-12-01',
+                    hora: '10:00',
+                    nombreCliente: 'Test Client'
+                });
+            expect(res.statusCode).toEqual(201);
+            expect(res.body).toHaveProperty('msg', 'Reserva creada');
+        });
+    });
+});
+\end{lstlisting}
+
+\subsubsection{Pruebas de Carga (tests/k6\_load\_test.js)}
+\begin{lstlisting}[language=JavaScript, caption=Script de carga para k6 con lógica de detección de entorno]
+import http from 'k6/http';
+import { check, sleep } from 'k6';
+
+export const options = {
+    stages: [
+        { duration: '30s', target: 20 },
+        { duration: '1m', target: 20 },
+        { duration: '30s', target: 0 },
+    ],
+    thresholds: {
+        http_req_duration: ['p(95)<500'],
+    },
+};
+
+const HOST_IP = __ENV.K6_HOST || '127.0.0.1';
+const BASE_URL = `http://${HOST_IP}:3000`;
+
+export default function () {
+    const payload = JSON.stringify({
+        email: 'test@example.com',
+        password: 'password123',
+    });
+    const params = { headers: { 'Content-Type': 'application/json' } };
+    const res = http.post(`${BASE_URL}/api/auth/login`, payload, params);
+
+    check(res, {
+        'status is 200 or 400': (r) => r.status === 200 || r.status === 400,
+    });
+    sleep(1);
+}
+\end{lstlisting}
+
+\subsubsection{Pruebas de Integración (tests/Reservas\_API.postman\_collection.json)} \label{sec:anexos_postman}
+\begin{lstlisting}[language=JavaScript, caption=Selección de scripts de validación dinámica en Postman]
+// Registro de Usuario
+pm.test("Status code is 201", function () {
+    pm.response.to.have.status(201);
+});
+pm.test("Mensaje de exito", function () {
+    pm.expect(pm.response.json().msg).to.eql("Usuario creado");
+});
+
+// Login y Captura de Token
+pm.test("Status code is 200", function () {
+    pm.response.to.have.status(200);
+});
+pm.test("Token presente", function () {
+    var jsonData = pm.response.json();
+    pm.expect(jsonData).to.have.property('token');
+    pm.environment.set("jwt_token", jsonData.token);
+});
+
+// Listar Reservas (Arreglo)
+pm.test("Es un arreglo", function () {
+    pm.expect(pm.response.json()).to.be.an('array');
+});
+\end{lstlisting}
+
+\subsubsection{Plan de Pruebas de Estrés (tests/system\_test\_jmeter.jmx - XML)}
+\begin{lstlisting}[language=XML, caption=Configuración del Thread Group y Sampler para Login en JMeter]
+<ThreadGroup guiclass="ThreadGroupGui" testclass="ThreadGroup" testname="Grupo de Usuarios - Sistema">
+  <stringProp name="ThreadGroup.num_threads">${__P(threads,50)}</stringProp>
+  <stringProp name="ThreadGroup.ramp_time">${__P(rampup,10)}</stringProp>
+  <elementProp name="ThreadGroup.main_controller" elementType="LoopController">
+    <boolProp name="LoopController.continue_forever">false</boolProp>
+    <stringProp name="LoopController.loops">1</stringProp>
+  </elementProp>
+</ThreadGroup>
+
+<HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="Login Request">
+  <stringProp name="HTTPSampler.domain">localhost</stringProp>
+  <stringProp name="HTTPSampler.port">3000</stringProp>
+  <stringProp name="HTTPSampler.path">/api/auth/login</stringProp>
+  <stringProp name="HTTPSampler.method">POST</stringProp>
+  <boolProp name="HTTPSampler.postBodyRaw">true</boolProp>
+  <elementProp name="HTTPsampler.Arguments" elementType="Arguments">
+    <collectionProp name="Arguments.arguments">
+      <elementProp name="" elementType="HTTPArgument">
+        <stringProp name="Argument.value">{"email": "test@example.com", "password": "password123"}</stringProp>
+      </elementProp>
+    </collectionProp>
+  </elementProp>
+</HTTPSamplerProxy>
+\end{lstlisting}
+
+\subsubsection{Configuración de Integración Continua (.github/workflows/ci.yml)}
+\begin{lstlisting}[language=XML, caption=Pipeline de CI/CD para automatización de pruebas y análisis en GitHub Actions]
+name: Node.js CI
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [18.x, 20.x]
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v3
+      with:
+        node-version: ${{ matrix.node-version }}
+        cache: 'npm'
+    - name: Install dependencies
+      run: npm install
+    - name: Run tests
+      run: npm test
+    - name: SonarQube Scan
+      uses: sonarsource/sonarqube-scan-action@master
+      env:
+        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+\end{lstlisting}
+
+\section{Referencias}
+\begin{enumerate}
+    \item OWASP ZAP Documentation - Web Security Testing Guide: https://www.zaproxy.org/docs/
+    \item Apache JMeter Documentation - Performance and Load Testing: https://jmeter.apache.org/usermanual/
+\end{enumerate}

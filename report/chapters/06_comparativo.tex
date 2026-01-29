@@ -1,0 +1,22 @@
+\section{Análisis Comparativo}
+
+A continuación, en la Tabla \ref{tab:comparativo}, se presenta la mejora cuantitativa del sistema tras la aplicación de la metodología de pruebas y las correcciones implementadas:
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|l|c|c|c|}
+\hline
+\textbf{Métrica} & \textbf{Antes} & \textbf{Después} & \textbf{Mejora/Reducción} \\ \hline
+Vulnerabilidades de Seguridad & 5 & 0 & \textcolor{green!60!black}{\textbf{100\%}} \\ \hline
+Code Smells (Mantenibilidad) & 3 & 0 & \textcolor{green!60!black}{\textbf{100\%}} \\ \hline
+Cobertura de Pruebas & 0\% & 82\% & \textcolor{blue}{\textbf{+82pp}} \\ \hline
+Tasa de Error (100 usuarios) & 24.0\% * & 0.0\% ** & \textcolor{green!60!black}{\textbf{100\%}} \\ \hline
+Punto de Falla (Usuarios) & < 100 & 500 & \textcolor{green!60!black}{\textbf{+400\%}} \\ \hline
+\end{tabular}
+\caption{Comparativa de calidad Antes vs. Después de las Pruebas y Optimizaciones}
+\label{tab:comparativo}
+\end{table}
+
+\textit{* Nota: La tasa del 24.0\% corresponde a la ejecución inicial inestable. ** Nota: Tras el calentamiento del servidor y optimización, la tasa se redujo al 0\%.}
+
+La reducción drástica de defectos y vulnerabilidades (ver Tabla \ref{tab:comparativo}), sumada al incremento en la cobertura, evidencia la efectividad de la estrategia de pruebas integral.

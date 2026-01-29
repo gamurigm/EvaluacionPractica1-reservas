@@ -1,0 +1,57 @@
+\section{Alcance}
+
+Este informe abarca la evaluación completa del ciclo de vida de pruebas del sistema de gestión de reservas, cubriendo los siguientes componentes y actividades:
+
+\begin{itemize}
+    \item \textbf{Componentes Evaluados:} 
+    \begin{itemize}
+        \item API REST y lógica de negocio.
+        \item Base de datos y mecanismos de persistencia.
+        \item Módulos de autenticación y seguridad.
+        \item Interfaces de gestión (simuladas mediante llamadas API).
+    \end{itemize}
+    
+    \item \textbf{Actividades Incluidas:}
+    \begin{itemize}
+        \item Análisis estático de código fuente.
+        \item Ejecución manual y automatizada de pruebas funcionales.
+        \item Evaluación de rendimiento bajo condiciones de carga normal y estrés.
+        \item Análisis de vulnerabilidades de seguridad web.
+        \item Implementación de pipelines de Integración Continua (CI/CD).
+    \end{itemize}
+    
+    \item \textbf{Exclusiones:}
+    \begin{itemize}
+        \item No se incluye el desarrollo de nuevas funcionalidades, únicamente la validación de las existentes.
+        \item Pruebas de interfaz de usuario (UI) a nivel gráfico profundo (se prioriza la validación lógica y de backend).
+    \end{itemize}
+\end{itemize}
+
+\subsection{Matriz de Trazabilidad: Requisitos vs Pruebas}
+Para asegurar una cobertura integral, se ha definido la siguiente relación entre los requisitos del sistema y las fases de prueba:
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|l|p{8cm}|}
+\hline
+\textbf{Requisito} & \textbf{Cubierto por} \\ \hline
+REQ-01: Crear reserva & Pruebas Funcionales, Pruebas de Carga, Pruebas de Seguridad \\ \hline
+REQ-02: Autenticación & Pruebas de Seguridad, Pruebas Funcionales \\ \hline
+REQ-03: Validación de fechas & Pruebas Unitarias, Pruebas Funcionales \\ \hline
+REQ-04: Rendimiento < 1s & Pruebas de Carga, Pruebas de Rendimiento \\ \hline
+REQ-05: Disponibilidad 99.9\% & Pruebas de Recuperación, Pruebas de Estrés \\ \hline
+\end{tabular}
+\caption{Matriz de trazabilidad de requisitos y pruebas}
+\label{tab:trazabilidad}
+\end{table}
+
+\subsection{Cronograma de Ejecución}
+El laboratorio se estructuró en un periodo de 5 semanas, distribuidas de la siguiente manera:
+
+\begin{itemize}
+    \item \textbf{Semana 1: Análisis Estático.} Ejecución con SonarQube y revisión manual.
+    \item \textbf{Semana 2: Pruebas Funcionales.} Validación de endpoints con Postman/Newman.
+    \item \textbf{Semana 3: Pruebas de Sistema.} Evaluación con JMeter y OWASP ZAP.
+    \item \textbf{Semana 4: Pruebas de Carga.} Automatización de escenarios con k6.
+    \item \textbf{Semana 5: Automatización y Documentación.} Integración CI/CD y reporte final.
+\end{itemize}

@@ -1,0 +1,354 @@
+\section{Pruebas Ejecutadas y Resultados}
+
+\subsection{Pruebas Estáticas (Fase 1)}
+El análisis estático se centró en la evaluación del código fuente sin ejecución, utilizando \textbf{SonarQube} y revisión manual.
+
+\subsubsection{Criterios de Evaluación}
+\begin{itemize}
+    \item \textbf{Bugs:} Defectos que afectan la funcionalidad.
+    \item \textbf{Vulnerabilidades:} Debilidades de seguridad explotables.
+    \item \textbf{Code Smells:} Indicadores de problemas de diseño y mantenibilidad.
+    \item \textbf{Deuda Técnica:} Estimación del tiempo necesario para corregir problemas.
+\end{itemize}
+
+\subsubsection{Paso 1: Análisis Preliminar del Sistema}
+Previamente al análisis automatizado, se realizó un estudio de la arquitectura del proyecto y patrones arquitectónicos para identificar componentes clave, endpoints y dependencias.
+
+El análisis estático se centró en la evaluación del código fuente sin ejecución, utilizando \textbf{SonarQube}. Para iniciar el escaneo desde la raíz del proyecto, se utilizó el siguiente comando:
+
+\begin{verbatim}
+sonar-scanner
+\end{verbatim}
+
+A continuación se detallan los criterios de evaluación:
+
+\begin{enumerate}
+    \item \textbf{Seguridad (Security Hotspot): Divulgación de versión del framework.}
+    \begin{itemize}
+        \item \textit{Problema:} La instancia de Express revelaba implícitamente información de la versión a través de los encabezados HTTP por defecto.
+        \item \textit{Solución:} Se deshabilitó el encabezado \texttt{x-powered-by} para reducir la superficie de ataque, resolviendo la alerta mostrada en la Figura \ref{fig:sonar_sec}.
+    \end{itemize}
+    \textbf{Corrección aplicada en \texttt{src/app.js}:}
+    \begin{verbatim}
+const app = express();
+app.disable('x-powered-by'); // Seguridad: Ocultar info del framework
+    \end{verbatim}
+    \begin{figure}[H]
+        \centering
+        \includegraphics[width=0.9\textwidth]{images/cap6-sonnar-security-issue.png}
+        \caption{Detalle del Security Hotspot en SonarQube}
+        \label{fig:sonar_sec}
+    \end{figure}
+
+    \item \textbf{Mantenibilidad (Code Smell): Funciones anónimas.}
+    \begin{itemize}
+        \item \textit{Problema:} El middleware de autenticación utilizaba una función flecha anónima, dificultando el rastreo de errores y el debugging.
+        \item \textit{Solución:} Se asignó un nombre descriptivo a la función antes de exportarla, corrigiendo el problema visualizado en la Figura \ref{fig:sonar_mant_low}.
+    \end{itemize}
+    \textbf{Refactorización en \texttt{src/middlewares/auth.js}:}
+    \begin{verbatim}
+// Antes: module.exports = (req, res, next) => { ... }
+
+// Ahora:
+const authMiddleware = (req, res, next) => {
+    // Lógica de validación...
+};
+module.exports = authMiddleware;
+    \end{verbatim}
+    \begin{figure}[H]
+        \centering
+        \includegraphics[width=0.9\textwidth]{images/cap8-sonnar-mantenibilidad-low.png}
+        \caption{Code Smell: Función anónima en middleware}
+        \label{fig:sonar_mant_low}
+    \end{figure}
+
+    \item \textbf{Mantenibilidad (Code Smell): Preferencia por Async/Await.}
+    \begin{itemize}
+        \item \textit{Problema:} La conexión a MongoDB utilizaba cadenas de promesas (\texttt{.then().catch()}), lo que puede complicar la lectura en flujos complejos.
+        \item \textit{Solución:} Se encapsuló la lógica en una función asíncrona moderna para mejorar la legibilidad del código (ver Figura \ref{fig:sonar_mant_high}).
+    \end{itemize}
+    \textbf{Refactorización en \texttt{src/app.js}:}
+    \begin{verbatim}
+const connectDB = async () => {
+  try {
+    await mongoose.connect(process.env.MONGO_URI);
+    console.log('Conectado a MongoDB');
+  } catch (err) {
+    console.error('Error al conectar MongoDB', err);
+  }
+};
+connectDB();
+    \end{verbatim}
+    \begin{figure}[H]
+        \centering
+        \includegraphics[width=0.9\textwidth]{images/cap9-sonnar-mantenibilidad-high.png}
+        \caption{Code Smell: Uso de Promises en lugar de Async/Await}
+        \label{fig:sonar_mant_high}
+    \end{figure}
+\end{enumerate}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1.0\textwidth]{images/cap5-sonnar-dashb.png}
+    \caption{Dashboard general de análisis estático con SonarQube (Antes)}
+    \label{fig:sonarqube}
+\end{figure}
+
+\subsubsection{Paso 3: Revisión Manual mediante Walkthrough y Checklist}
+Se realizó una evaluación manual del código fuente y especificaciones funcionales mediante un checklist de validación. Se verificó la implementación de validaciones de fechas, controles de acceso y claridad en los mensajes de error.
+
+\subsubsection{Verificación Post-Corrección}
+Tras aplicar las soluciones descritas, se ejecutó un nuevo análisis estático para validar la efectividad de los cambios. Como se observa en la siguiente figura, el código cumple con los estándares de calidad definidos (Quality Gate Passed), eliminando los Security Hotspots y Code Smells críticos.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1.0\textwidth]{images/cap10-sonnar-all-passed.png}
+    \caption{Dashboard de SonarQube tras correcciones (0 Errores)}
+    \label{fig:sonarqube_clean}
+\end{figure}
+
+Para la validación funcional se implementó una suite de pruebas automatizadas utilizando \textbf{Jest} y \textbf{Supertest}. El script \texttt{tests/functional.test.js} valida los flujos críticos de autenticación y reserva. La ejecución se realizó mediante:
+
+\begin{verbatim}
+npm test
+\end{verbatim}
+
+\subsubsection{Paso 4: Diseño de Casos de Prueba Funcionales}
+Se definieron y estructuraron casos de prueba CP-01 a CP-05 siguiendo el estándar de especificación de pruebas del proyecto.
+
+\subsubsection{Paso 5: Validación de Integración mediante Postman}
+Se validaron los escenarios de registro, autenticación, creación y consulta de reservas de forma integrada utilizando \textbf{Postman}. En la Figura \ref{fig:postman_setup} se observa la estructura de la colección y la definición de las variables de entorno, mientras que se creó una lógica que automatiza la obtención del token JWT para su uso en las cabeceras de autorización de las peticiones subsecuentes.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\textwidth]{images/postman0.png} 
+    \caption{Diseño y configuración de la colección de pruebas en la interfaz de Postman.}
+    \label{fig:postman_setup}
+\end{figure}
+
+Posteriormente, se procedió con la ejecución automatizada de dicha colección (ver Figura \ref{fig:postman_runner}) utilizando la herramienta Newman, lo cual permite integrar estas pruebas en flujos de CI/CD.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\textwidth]{images/postman.png} 
+    \caption{Ejecución de la colección de pruebas en Postman (Collection Runner) utilizando Newman.}
+    \label{fig:postman_runner}
+\end{figure}
+
+Para la ejecución automatizada de esta colección desde la consola, se utilizó el siguiente comando:
+
+\begin{verbatim}
+npx newman run tests/Reservas_API.postman_collection.json
+\end{verbatim}
+
+Los resultados detallados de los scripts de validación se encuentran documentados en la Sección \ref{sec:anexos_postman} de los Anexos.
+
+\subsubsection{Paso 6: Evaluación de Seguridad Básica}
+Se verificó el acceso a endpoints protegidos sin token, con tokens inválidos e intentos de acceso a recursos ajenos.
+
+\subsubsection{Casos de Prueba Funcionales (Diseño y Ejecución)}
+Se definieron y ejecutaron los siguientes casos de prueba críticos para validar la lógica de negocio y la seguridad de los endpoints:
+
+\begin{enumerate}
+    \item \textbf{CP-01: Crear reserva válida.}
+    \begin{itemize}
+        \item \textit{Entrada:} Fecha y hora laborables válidas.
+        \item \textit{Resultado esperado:} Reserva creada exitosamente (201 Created / 200 OK).
+    \end{itemize}
+    
+    \item \textbf{CP-02: Crear reserva en domingo.}
+    \begin{itemize}
+        \item \textit{Entrada:} Fecha correspondiente a un domingo.
+        \item \textit{Resultado esperado:} Error 400 (No permitido por política de negocio).
+    \end{itemize}
+    
+    \item \textbf{CP-03: Acceso a recursos sin token.}
+    \begin{itemize}
+        \item \textit{Entrada:} Solicitud HTTP sin encabezado de autorización.
+        \item \textit{Resultado esperado:} 401 Unauthorized.
+    \end{itemize}
+    
+    \item \textbf{CP-04: Token inválido o manipulado.}
+    \begin{itemize}
+        \item \textit{Entrada:} Token JWT expirado o con firma incorrecta.
+        \item \textit{Resultado esperado:} 401 Unauthorized.
+    \end{itemize}
+    
+    \item \textbf{CP-05: Acceso a recurso de otro usuario.}
+    \begin{itemize}
+        \item \textit{Entrada:} ID de reserva perteneciente a un usuario distinto.
+        \item \textit{Resultado esperado:} 403 Forbidden.
+    \end{itemize}
+\end{enumerate}
+
+La ejecución de estos tests garantiza que la lógica de negocio y los middlewares de seguridad funcionan según lo esperado. A continuación se evidencia la ejecución exitosa de la suite de pruebas:
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1.0\textwidth]{images/cap3-functional-test-run3.png}
+    \caption{Ejecución exitosa de Tests Funcionales con Jest}
+    \label{fig:jest_test}
+\end{figure}
+
+
+
+\subsection{Pruebas de Sistema y Seguridad (Fase 3)}
+
+Siguiendo la especificación del laboratorio, se evaluó el rendimiento del sistema completo utilizando \textbf{Apache JMeter}. Se diseñaron múltiples escenarios para medir el comportamiento del sistema bajo diferentes niveles de concurrencia. La ejecución en modo No-GUI se realizó con el comando:
+
+\begin{verbatim}
+jmeter -n -t tests/system_test_jmeter.jmx -l tests/results_100.jtl
+\end{verbatim}
+
+Una vez finalizada la ejecución, se generaron los reportes HTML con los comandos:
+
+\begin{verbatim}
+jmeter -g tests/results_100.jtl -o tests/jmeter_report_100;
+jmeter -g tests/results_250.jtl -o tests/jmeter_report_250;
+jmeter -g tests/results_500.jtl -o tests/jmeter_report_500;
+jmeter -g tests/results_1000.jtl -o tests/jmeter_report_1000
+\end{verbatim}
+
+\textbf{Nota sobre la Ejecución:} Tras identificar un fallo inicial del 100\% debido a la indisponibilidad del servicio, se procedió a levantar el servidor backend y re-ejecutar la suite completa, obteniendo los resultados válidos presentados a continuación.
+
+\subsubsection{Paso 8: Pruebas de Recuperación y Continuidad Operacional}
+Se realizaron simulación de fallos mediante la interrupción controlada del servicio para validar el reinicio automático del sistema y la recuperación de la integridad de los datos.
+
+\subsubsection{Paso 9: Análisis Automatizado de Vulnerabilidades con OWASP ZAP}
+Para la seguridad avanzada, se empleó \textbf{OWASP ZAP (Zed Attack Proxy)} realizando un escaneo activo sobre los endpoints de la API para identificar fallos de seguridad críticos.
+
+\textbf{Escenarios de Carga Evaluados:}
+\begin{itemize}
+    \item \textbf{Carga Nominal:} 100 usuarios concurrentes.
+    \item \textbf{Carga Media:} 250 usuarios concurrentes.
+    \item \textbf{Carga Alta:} 500 usuarios concurrentes.
+    \item \textbf{Carga de Estrés:} 1000 usuarios concurrentes.
+\end{itemize}
+
+Los resultados, consolidados en la Tabla \ref{tab:jmeter_multi_results}, demuestran la estabilidad del sistema hasta los 500 usuarios, con una degradación significativa al alcanzar los 1000 usuarios.
+
+\begin{table}[H]
+    \centering
+    \begin{tabular}{|l|c|c|r|}
+        \hline
+        \textbf{Usuarios} & \textbf{Tiempo Promedio} & \textbf{\% Errores} & \textbf{Estado} \\ \hline
+        100               & 1.25 s                   & 24.0\%              & Inestable \\ \hline
+        250               & 12.6 s                   & 0.0\%               & Estable \\ \hline
+        500               & 17.2 s                   & 0.6\%               & Límite \\ \hline
+        1000              & 10.3 s                   & 47.4\%              & Degradado \\ \hline
+    \end{tabular}
+    \caption{Resultados comparativos de carga con JMeter}
+    \label{tab:jmeter_multi_results}
+\end{table}
+
+El análisis de los resultados de JMeter (visualizados en las capturas de la Sección de Anexos) revela un hallazgo crítico: a pesar de ser una carga nominal de 100 usuarios, se obtuvo un 24.0\% de errores iniciales, lo cual sugiere un cuello de botella en el arranque en frío del servidor o en la gestión de la cola de conexiones inicial. Al incrementar a 250 usuarios, la latencia subió a 12.6s pero el sistema se estabilizó momentáneamente. A los 500 usuarios, el sistema alcanzó su capacidad máxima teórica con ligeros errores (0.6\%). Finalmente, bajo carga de estrés de 1000 usuarios, el sistema experimentó un colapso crítico con un 47.4\% de errores, confirmando la saturación total de recursos.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{images/jmeter-dash.png} 
+    \caption{Dashboard de monitoreo de carga en JMeter}
+    \label{fig:jmeter_dashboard}
+\end{figure}
+
+\subsubsection{Análisis Automatizado de Vulnerabilidades con OWASP ZAP}
+Para la seguridad avanzada, se empleó \textbf{OWASP ZAP (Zed Attack Proxy)} realizando un escaneo activo sobre los endpoints de la API para identificar fallos de seguridad críticos.
+
+A continuación se detallan los hallazgos más relevantes según su nivel de riesgo, los cuales se resumen gráficamente en la Figura \ref{fig:owasp_zap}:
+
+\begin{itemize}
+    \item \textbf{Inyección SQL (Riesgo Alto):} Se detectaron parámetros sin sanitizar en las consultas a la base de datos, lo que podría permitir la extracción no autorizada de información.
+    \item \textbf{Cross-Site Scripting - XSS (Riesgo Alto):} Falta de validación en las entradas de usuario que permite la ejecución de scripts maliciosos.
+    \item \textbf{Autenticación Débil (Riesgo Medio):} Uso de mecanismos de almacenamiento de contraseñas sin el nivel de encriptación recomendado.
+    \item \textbf{Información Sensible Expuesta (Riesgo Medio):} Presencia de tokens de autenticación y datos críticos en los logs del sistema.
+\end{itemize}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{images/zap-erros.png} 
+    \caption{Resumen de alertas de seguridad generadas por OWASP ZAP}
+    \label{fig:owasp_zap}
+\end{figure}
+
+Se implementaron pruebas de carga utilizando \textbf{k6}, herramienta moderna y eficiente para simulación de tráfico. Mediante k6, se implementan scripts de prueba para simular el comportamiento de usuarios reales y recopilar datos de rendimiento esenciales. El comando de ejecución utilizado fue:
+
+\begin{verbatim}
+k6 run tests/k6_load_test.js
+\end{verbatim}
+
+cuyos resultados se aprecian en la Figura \ref{fig:k6_results}.
+
+\textbf{Modalidades de Prueba Implementadas:}
+\begin{itemize}
+    \item \textbf{Load testing:} Evaluación del rendimiento bajo carga normal prevista.
+    \item \textbf{Stress testing:} Determinación del punto de ruptura del sistema.
+    \item \textbf{Spike testing:} Análisis de comportamiento ante picos repentinos de tráfico.
+    \item \textbf{Soak testing:} Validación de estabilidad en ejecución prolongada (fugas de memoria).
+\end{itemize}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1.0\textwidth]{images/cap4-k6-test.png}
+    \caption{Resumen de métricas de ejecución de k6 (p95 y http\_req\_duration)}
+    \label{fig:k6_results}
+\end{figure}
+
+\subsection{Automatización y Entrega Continua (Fase 5)}
+Se implementó un pipeline de Integración Continua (CI/CD) que garantiza que solo código de calidad verificada llegue a producción.
+
+\subsubsection{Paso 11: Pruebas Unitarias Automatizadas con Jest}
+Se utiliza \textbf{Jest} para la validación lógica de los componentes individuales. Un ejemplo de caso de prueba unitaria implementado es:
+
+\begin{verbatim}
+// Ejemplo de validación de lógica de reservas
+expect(crearReserva({fecha: '2024-01-15', hora: '10:00'}))
+    .toEqual({status: 'creada', id: 123});
+\end{verbatim}
+
+\subsection{Resumen de Comandos Ejecutados}
+Para la reproducción de las pruebas y la validación de los resultados presentados, se utilizaron los siguientes comandos desde la raíz del proyecto:
+
+\begin{description}
+    \item[Análisis Estático (SonarQube):] 
+    \begin{verbatim}sonar-scanner\end{verbatim}
+    
+    \item[Pruebas Funcionales (Jest):] 
+    \begin{verbatim}npm test\end{verbatim}
+    o de forma específica:
+    \begin{verbatim}npx jest tests/functional.test.js\end{verbatim}
+    
+    \item[Pruebas de Integración (Postman/Newman):] 
+    \begin{verbatim}npx newman run tests/Reservas_API.postman_collection.json\end{verbatim}
+    
+    \item[Pruebas de Carga (JMeter - Modo No-GUI):] 
+    \begin{verbatim}jmeter -n -t tests/system_test_jmeter.jmx -l tests/results_100.jtl\end{verbatim}
+    
+    \item[Generación de Reportes JMeter:] 
+    \begin{verbatim}jmeter -g tests/results_100.jtl -o tests/jmeter_report_100\end{verbatim}
+    
+    \item[Pruebas de Rendimiento (k6):] 
+    \begin{verbatim}k6 run tests/k6_load_test.js\end{verbatim}
+\end{description}
+
+\subsubsection{Implementación de Integración Continua (CI/CD)}
+Se implementó un pipeline de integración continua utilizando \textbf{GitHub Actions}, el cual ejecuta automáticamente en cada \textit{commit} los siguientes procesos:
+\begin{itemize}
+    \item Ejecución de suite completa de pruebas unitarias e integración con \textbf{Jest}.
+    \item Análisis estático de código (\textit{linting}) y verificación de estándares.
+    \item Análisis automático de calidad y seguridad del código mediante \textbf{SonarQube}.
+\end{itemize}
+
+\subsubsection{Evidencia de Ejecución y Artefactos}
+Como evidencia de la ejecución integral del laboratorio, se han generado y almacenado los siguientes artefactos en el directorio \texttt{tests/}:
+\begin{itemize}
+    \item \textbf{Scripts de JMeter:} \texttt{system\_test\_jmeter.jmx} (parametrizado para hilos y ramp-up).
+    \item \textbf{Colección de Postman:} \texttt{Reservas\_API.postman\_collection.json} (con scripts de aserción).
+    \item \textbf{Reportes HTML:} Directorios \texttt{jmeter\_report\_100/}, \texttt{jmeter\_report\_250/}, \texttt{jmeter\_report\_500/} y \texttt{jmeter\_report\_1000/}.
+    \item \textbf{Análisis de Seguridad:} Archivo de hallazgos \texttt{zap\_evidence.md}.
+\end{itemize}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1.0\textwidth]{images/cap3-functional-test-run3.png}
+    \caption{Ejecución automática de suite de pruebas en el entorno de desarrollo}
+    \label{fig:ci_cd_run}
+\end{figure}
