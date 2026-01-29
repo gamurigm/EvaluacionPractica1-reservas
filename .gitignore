@@ -35,6 +35,8 @@ report/*.vrb
 
 # Excluir archivos irrelevantes o de planificación
 pptx_content.txt
+extract_pptx.py
+"FORMATO INFORME FINAL - PRUEBAS DE SW.pdf"
 *.pptx
 *.docx
 *.txt
