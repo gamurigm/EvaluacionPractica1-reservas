@@ -346,9 +346,19 @@ Como evidencia de la ejecución integral del laboratorio, se han generado y alma
     \item \textbf{Análisis de Seguridad:} Archivo de hallazgos \texttt{zap\_evidence.md}.
 \end{itemize}
 
+\subsubsection{Evidencia de Integración Continua}
+Tras superar retos técnicos iniciales relacionados con la conectividad de la base de datos en entornos virtualizados y la compatibilidad de versiones de las librerías de prueba, se logró la ejecución exitosa del pipeline. Como se observa en la Figura \ref{fig:github_actions_success}, todos los jobs (unit tests, functional tests y SonarQube scan) finalizaron correctamente.
+
 \begin{figure}[H]
     \centering
-    \includegraphics[width=1.0\textwidth]{images/cap3-functional-test-run3.png}
-    \caption{Ejecución automática de suite de pruebas en el entorno de desarrollo}
-    \label{fig:ci_cd_run}
+    \includegraphics[width=1.0\textwidth]{images/CICD.png}
+    \caption{Ejecución exitosa del Pipeline de CI/CD en GitHub Actions}
+    \label{fig:github_actions_success}
 \end{figure}
+
+Para alcanzar este estado, se implementaron las siguientes soluciones técnicas:
+\begin{itemize}
+    \item \textbf{Contenerización de Base de Datos:} Se añadió un servicio de MongoDB dentro del runner de Ubuntu, incluyendo un \textit{health check} mediante \texttt{mongosh} para asegurar que el servicio esté listo antes de iniciar las pruebas.
+    \item \textbf{Estabilización de Dependencias:} Se ajustaron las versiones de \textbf{Jest} y \textbf{Supertest} a versiones estables (v29 y v6 respectivamente) para evitar errores de compatibilidad en el entorno de GitHub.
+    \item \textbf{Gestión de Secretos:} Se configuraron las variables de entorno para que el análisis de SonarQube sea opcional (\texttt{continue-on-error}), permitiendo que el flujo principal continúe incluso si el servicio externo de análisis estático presenta latencia.
+\end{itemize}
