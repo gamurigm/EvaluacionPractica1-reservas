@@ -244,6 +244,12 @@ jobs:
       matrix:
         node-version: [18.x, 20.x]
 
+    services:
+      mongodb:
+        image: mongo:latest
+        ports:
+          - 27017:27017
+
     steps:
     - uses: actions/checkout@v4
     - name: Use Node.js ${{ matrix.node-version }}
@@ -255,6 +261,9 @@ jobs:
       run: npm install
     - name: Run tests
       run: npm test
+      env:
+        MONGO_URI: "mongodb://localhost:27017/test_db"
+        JWT_SECRET: "test_secret_key"
     - name: SonarQube Scan
       uses: sonarsource/sonarqube-scan-action@master
       env:
